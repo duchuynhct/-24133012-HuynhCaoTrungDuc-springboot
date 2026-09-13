@@ -251,7 +251,7 @@ Dự án được xây dựng tuần tự qua 6 giai đoạn phát triển, áp 
 | **GĐ 3** | `feature/domain-model` | Xây dựng Entity `Category`, `User` và các Repository kế thừa JPA, tự sinh bảng DB | ✅ Merged PR #1 |
 | **GĐ 4** | `feature/category-crud` | Xây dựng đầy đủ Service, Controller, View CRUD, Tìm kiếm, Phân trang cho Category | ✅ Merged PR #2 |
 | **GĐ 5** | `feature/user-crud` | Xây dựng CRUD, Tìm kiếm đa trường, Phân trang, Check trùng lặp, Live Avatar cho User | ✅ Merged PR #3 |
-| **GĐ 6** | `feature/polish-and-docs` | Tinh chỉnh Dashboard thống kê, menu active, đồng bộ Tomcat 10 và hoàn thiện README | 🚀 Đang gửi PR |
+| **GĐ 6** | `feature/polish-and-docs` | Tinh chỉnh Dashboard thống kê, menu active, đồng bộ Tomcat 10 và hoàn thiện README | ✅ Merged PR #4 |
 
 ---
 *Bản quyền bài tập © 2026 - Huỳnh Cao Trung Đức (MSSV: 24133012) - HCM-UTE.*
