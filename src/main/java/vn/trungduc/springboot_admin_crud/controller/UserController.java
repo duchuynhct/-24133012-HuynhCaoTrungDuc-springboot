@@ -21,6 +21,8 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.StandardCopyOption;
+import java.nio.file.StandardOpenOption;
+import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -95,49 +97,43 @@ public class UserController {
                 }
 
                 // Kiểm tra định dạng ảnh hợp lệ
-                if (!ext.equals(".jpg") && !ext.equals(".jpeg") && !ext.equals(".png") && !ext.equals(".gif") && !ext.equals(".webp")) {
-                    redirectAttributes.addFlashAttribute("errorMessage", "Chỉ chấp nhận các định dạng file hình ảnh (JPG, PNG, GIF, WEBP)!");
+                List<String> allowedExts = List.of(".jpg", ".jpeg", ".png", ".gif", ".webp", ".bmp", ".jfif", ".svg");
+                if (!allowedExts.contains(ext)) {
+                    redirectAttributes.addFlashAttribute("errorMessage", "Chỉ chấp nhận các định dạng file hình ảnh (JPG, PNG, GIF, WEBP, BMP)!");
                     return user.getId() == null ? "redirect:/admin/users/add" : "redirect:/admin/users/edit/" + user.getId();
                 }
 
                 String newFileName = "user_" + System.currentTimeMillis() + "_" + UUID.randomUUID().toString().substring(0, 8) + ext;
+                byte[] fileBytes = avatarFile.getBytes();
 
-                // Lưu vào thư mục cấu hình: uploads/users
-                Path uploadPath = Paths.get(uploadDir, "users").toAbsolutePath();
-                if (!Files.exists(uploadPath)) {
-                    Files.createDirectories(uploadPath);
-                }
-                Path targetPath = uploadPath.resolve(newFileName);
-                try (InputStream inputStream = avatarFile.getInputStream()) {
-                    Files.copy(inputStream, targetPath, StandardCopyOption.REPLACE_EXISTING);
-                }
+                // Danh sách các thư mục cần lưu để đảm bảo ảnh luôn hiển thị ở mọi môi trường
+                List<Path> targetDirs = new java.util.ArrayList<>();
+                targetDirs.add(Paths.get(uploadDir, "users").toAbsolutePath());
+                targetDirs.add(Paths.get("uploads", "users").toAbsolutePath());
 
-                // Đồng bộ sang servletContext realPath nếu có (Tomcat ROOT)
                 try {
                     String realPath = request.getServletContext().getRealPath("/uploads/users");
                     if (realPath != null) {
-                        Path realUploadPath = Paths.get(realPath);
-                        if (!Files.exists(realUploadPath)) {
-                            Files.createDirectories(realUploadPath);
-                        }
-                        Path realTargetPath = realUploadPath.resolve(newFileName);
-                        if (!realTargetPath.equals(targetPath)) {
-                            Files.copy(targetPath, realTargetPath, StandardCopyOption.REPLACE_EXISTING);
-                        }
+                        targetDirs.add(Paths.get(realPath).toAbsolutePath());
                     }
                 } catch (Exception ignored) {
                 }
 
-                // Đồng bộ sang src/main/webapp/uploads/users nếu có thư mục source
                 try {
                     Path devWebappPath = Paths.get("src/main/webapp/uploads/users").toAbsolutePath();
-                    if (Files.exists(devWebappPath)) {
-                        Path devTargetPath = devWebappPath.resolve(newFileName);
-                        if (!devTargetPath.equals(targetPath)) {
-                            Files.copy(targetPath, devTargetPath, StandardCopyOption.REPLACE_EXISTING);
-                        }
-                    }
+                    targetDirs.add(devWebappPath);
                 } catch (Exception ignored) {
+                }
+
+                for (Path dir : targetDirs) {
+                    try {
+                        if (!Files.exists(dir)) {
+                            Files.createDirectories(dir);
+                        }
+                        Path targetFile = dir.resolve(newFileName);
+                        Files.write(targetFile, fileBytes, StandardOpenOption.CREATE, StandardOpenOption.TRUNCATE_EXISTING);
+                    } catch (Exception ignored) {
+                    }
                 }
 
                 // Gán đường dẫn URL cho avatar
