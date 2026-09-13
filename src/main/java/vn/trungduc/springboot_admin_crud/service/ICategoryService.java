@@ -20,4 +20,6 @@ public interface ICategoryService {
     Category save(Category category);
 
     void deleteById(Long id);
+
+    long count();
 }
