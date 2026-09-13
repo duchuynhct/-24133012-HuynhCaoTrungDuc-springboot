@@ -1,6 +1,6 @@
 # BÀI TẬP LẬP TRÌNH WEB - SPRING BOOT ADMIN CRUD
 **TRƯỜNG ĐẠI HỌC CÔNG NGHỆ KỸ THUẬT TP.HCM (HCM-UTE)**  
-**KHOA CÔNG NGHỆ THÔNG TIN - BỘ MÔN CÔNG NGHỆ PHẦN MỀM**
+**KHOA CÔNG NGHỆ THÔNG TIN - BỘ MÔN LẬP TRÌNH WEB**
 
 ---
 
@@ -231,7 +231,7 @@ spring.jpa.properties.hibernate.format_sql=true
 ### 1. Tại Sao Sử Dụng Apache Tomcat 10 Thay Vì Tomcat 11?
 * **Hiện tượng:** Khi chạy trên Apache Tomcat 11 kết hợp với bộ lọc SiteMesh 3, trình duyệt trả về **trang trắng hoàn toàn** với HTTP Status `200 OK` nhưng `Content-Length: 0`.
 * **Nguyên nhân cốt lõi:** Apache Tomcat 11 áp dụng nghiêm ngặt đặc tả Jakarta Servlet 6.1, trong đó cơ chế `RequestDispatcher.forward()` sẽ tự động gọi `commitResponse()` và flush buffer ngay khi kết thúc forward. Do đó, khi servlet forward đến file JSP, luồng response bị đóng lại trước khi `SiteMeshFilter` có cơ hội thu nạp nội dung của JSP để áp decorator layout vào.
-* **Giải pháp chuẩn hóa theo hướng dẫn của giảng viên:**
+* **Giải pháp chuẩn hóa:**
   1. Sử dụng **Apache Tomcat 10.1.x** (chuẩn Servlet 6.0 / Jakarta EE 10), nơi cơ chế buffer response tương thích hoàn toàn với kiến trúc của SiteMesh 3.
   2. Bổ sung cấu hình `viewResolver.setAlwaysInclude(true)` trong [`WebMvcConfig.java`](file:///d:/HCMUTE/LT_Web/-24133012-HuynhCaoTrungDuc-springboot/src/main/java/vn/trungduc/springboot_admin_crud/config/WebMvcConfig.java) để ép buộc chuyển tiếp dùng cơ chế `include()` thay vì `forward()`, ngăn chặn tình trạng response bị đóng sớm.
 
