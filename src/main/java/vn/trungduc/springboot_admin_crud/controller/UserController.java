@@ -1,18 +1,30 @@
 package vn.trungduc.springboot_admin_crud.controller;
 
+import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
+import org.springframework.util.StringUtils;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 import vn.trungduc.springboot_admin_crud.entity.User;
 import vn.trungduc.springboot_admin_crud.service.IUserService;
 
+import java.io.InputStream;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.nio.file.StandardCopyOption;
+import java.nio.file.StandardOpenOption;
+import java.util.List;
 import java.util.Optional;
+import java.util.UUID;
 
 @Controller
 @RequestMapping("/admin/users")
@@ -20,6 +32,9 @@ import java.util.Optional;
 public class UserController {
 
     private final IUserService userService;
+
+    @Value("${app.upload.dir:uploads}")
+    private String uploadDir;
 
     @GetMapping
     public String listUsers(
@@ -63,9 +78,74 @@ public class UserController {
     @PostMapping("/save")
     public String saveUser(
             @ModelAttribute("user") User user,
+            @RequestParam(name = "avatarFile", required = false) MultipartFile avatarFile,
+            HttpServletRequest request,
             RedirectAttributes redirectAttributes) {
 
-        // 1. Thêm mới người dùng
+        // 1. Xử lý upload ảnh đại diện nếu người dùng chọn file
+        if (avatarFile != null && !avatarFile.isEmpty()) {
+            try {
+                String originalFilename = StringUtils.cleanPath(
+                        avatarFile.getOriginalFilename() != null ? avatarFile.getOriginalFilename() : "avatar.jpg"
+                );
+                String ext = "";
+                int dotIndex = originalFilename.lastIndexOf(".");
+                if (dotIndex >= 0) {
+                    ext = originalFilename.substring(dotIndex).toLowerCase();
+                } else {
+                    ext = ".jpg";
+                }
+
+                // Kiểm tra định dạng ảnh hợp lệ
+                List<String> allowedExts = List.of(".jpg", ".jpeg", ".png", ".gif", ".webp", ".bmp", ".jfif", ".svg");
+                if (!allowedExts.contains(ext)) {
+                    redirectAttributes.addFlashAttribute("errorMessage", "Chỉ chấp nhận các định dạng file hình ảnh (JPG, PNG, GIF, WEBP, BMP)!");
+                    return user.getId() == null ? "redirect:/admin/users/add" : "redirect:/admin/users/edit/" + user.getId();
+                }
+
+                String newFileName = "user_" + System.currentTimeMillis() + "_" + UUID.randomUUID().toString().substring(0, 8) + ext;
+                byte[] fileBytes = avatarFile.getBytes();
+
+                // Danh sách các thư mục cần lưu để đảm bảo ảnh luôn hiển thị ở mọi môi trường
+                List<Path> targetDirs = new java.util.ArrayList<>();
+                targetDirs.add(Paths.get(uploadDir, "users").toAbsolutePath());
+                targetDirs.add(Paths.get("uploads", "users").toAbsolutePath());
+
+                try {
+                    String realPath = request.getServletContext().getRealPath("/uploads/users");
+                    if (realPath != null) {
+                        targetDirs.add(Paths.get(realPath).toAbsolutePath());
+                    }
+                } catch (Exception ignored) {
+                }
+
+                try {
+                    Path devWebappPath = Paths.get("src/main/webapp/uploads/users").toAbsolutePath();
+                    targetDirs.add(devWebappPath);
+                } catch (Exception ignored) {
+                }
+
+                for (Path dir : targetDirs) {
+                    try {
+                        if (!Files.exists(dir)) {
+                            Files.createDirectories(dir);
+                        }
+                        Path targetFile = dir.resolve(newFileName);
+                        Files.write(targetFile, fileBytes, StandardOpenOption.CREATE, StandardOpenOption.TRUNCATE_EXISTING);
+                    } catch (Exception ignored) {
+                    }
+                }
+
+                // Gán đường dẫn URL cho avatar
+                user.setAvatar("/uploads/users/" + newFileName);
+
+            } catch (Exception e) {
+                redirectAttributes.addFlashAttribute("errorMessage", "Lỗi khi lưu ảnh đại diện: " + e.getMessage());
+                return user.getId() == null ? "redirect:/admin/users/add" : "redirect:/admin/users/edit/" + user.getId();
+            }
+        }
+
+        // 2. Thêm mới người dùng
         if (user.getId() == null) {
             if (user.getUsername() == null || user.getUsername().trim().isEmpty()) {
                 redirectAttributes.addFlashAttribute("errorMessage", "Tên đăng nhập không được để trống!");
@@ -90,7 +170,7 @@ public class UserController {
             user.setUsername(user.getUsername().trim());
             user.setEmail(user.getEmail().trim());
         } 
-        // 2. Chỉnh sửa người dùng
+        // 3. Chỉnh sửa người dùng
         else {
             Optional<User> existingUserOpt = userService.findById(user.getId());
             if (existingUserOpt.isEmpty()) {
@@ -109,6 +189,13 @@ public class UserController {
             // Nếu không nhập mật khẩu mới thì giữ nguyên mật khẩu cũ
             if (user.getPassword() == null || user.getPassword().trim().isEmpty()) {
                 user.setPassword(existingUser.getPassword());
+            }
+
+            // Nếu không upload ảnh mới thì giữ nguyên ảnh cũ
+            if (avatarFile == null || avatarFile.isEmpty()) {
+                if (user.getAvatar() == null || user.getAvatar().trim().isEmpty()) {
+                    user.setAvatar(existingUser.getAvatar());
+                }
             }
 
             // Giữ nguyên username gốc

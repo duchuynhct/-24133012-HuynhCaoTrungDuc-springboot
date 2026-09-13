@@ -56,4 +56,10 @@ public class CategoryServiceImpl implements ICategoryService {
     public void deleteById(Long id) {
         categoryRepository.deleteById(id);
     }
+
+    @Override
+    @Transactional(readOnly = true)
+    public long count() {
+        return categoryRepository.count();
+    }
 }

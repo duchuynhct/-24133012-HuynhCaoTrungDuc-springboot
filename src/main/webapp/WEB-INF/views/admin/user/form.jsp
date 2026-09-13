@@ -33,8 +33,9 @@
                     </h5>
                 </div>
                 <div class="card-body p-4">
-                    <form action="<c:url value='/admin/users/save'/>" method="POST">
+                    <form action="<c:url value='/admin/users/save'/>" method="POST" enctype="multipart/form-data">
                         <input type="hidden" name="id" value="${user.id}"/>
+                        <input type="hidden" name="avatar" value="${user.avatar}"/>
 
                         <div class="row g-3">
                             <!-- Tên đăng nhập (Username) -->
@@ -103,21 +104,47 @@
                                 </select>
                             </div>
 
-                            <!-- Ảnh đại diện Avatar (URL) -->
+                            <!-- Ảnh đại diện Avatar (Upload File) -->
                             <div class="col-12">
-                                <label for="avatar" class="form-label fw-bold">Ảnh Đại Diện (URL Hình Ảnh)</label>
+                                <label for="avatarFile" class="form-label fw-bold">Ảnh Đại Diện (Tải Lên Từ Máy Tính)</label>
                                 <div class="d-flex align-items-center gap-3">
-                                    <img id="avatarPreview" 
-                                         src="${not empty user.avatar ? user.avatar : 'https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/icons/person-circle.svg'}" 
-                                         alt="Preview" class="rounded-circle shadow-sm border"
-                                         style="width: 55px; height: 55px; object-fit: cover;"
-                                         onerror="this.src='https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/icons/person-circle.svg';">
-                                    <input type="text" class="form-control" id="avatar" name="avatar"
-                                           value="<c:out value='${user.avatar}'/>"
-                                           placeholder="Dán link ảnh trực tiếp (https://.../avatar.jpg)"
-                                           oninput="updateAvatarPreview(this.value)">
+                                    <c:choose>
+                                        <c:when test="${not empty user.avatar}">
+                                            <c:choose>
+                                                <c:when test="${user.avatar.startsWith('http://') or user.avatar.startsWith('https://')}">
+                                                    <c:set var="avatarImgSrc" value="${user.avatar}" />
+                                                </c:when>
+                                                <c:otherwise>
+                                                    <c:url var="avatarImgSrc" value="${user.avatar}" />
+                                                </c:otherwise>
+                                            </c:choose>
+                                        </c:when>
+                                        <c:otherwise>
+                                            <c:set var="avatarImgSrc" value="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/icons/person-circle.svg" />
+                                        </c:otherwise>
+                                    </c:choose>
+                                    <div class="position-relative">
+                                        <img id="avatarPreview" 
+                                             src="${avatarImgSrc}" 
+                                             alt="Preview" class="rounded-circle shadow-sm border border-2 border-primary"
+                                             style="width: 75px; height: 75px; object-fit: cover; background-color: #f8f9fa;"
+                                             onerror="this.onerror=null; this.src='https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/icons/person-circle.svg';">
+                                    </div>
+                                    <div class="flex-grow-1">
+                                        <input type="file" class="form-control" id="avatarFile" name="avatarFile"
+                                               accept="image/*"
+                                               onchange="previewImage(this);">
+                                        <div id="previewStatus" class="mt-1"></div>
+                                        <div class="form-text">
+                                            Chọn file ảnh từ máy tính (JPG, PNG, GIF, WEBP, BMP). Ảnh sẽ hiển thị xem trước tức thì ngay bên cạnh.
+                                            <c:if test="${not empty user.avatar}">
+                                                <span class="text-primary fw-semibold d-block mt-1">
+                                                    <i class="bi bi-info-circle me-1"></i>Tài khoản đã có ảnh đại diện. Bỏ trống ô này nếu muốn giữ nguyên ảnh hiện tại.
+                                                </span>
+                                            </c:if>
+                                        </div>
+                                    </div>
                                 </div>
-                                <div class="form-text">Bạn có thể dán đường dẫn ảnh trực tuyến để xem trước ngay lập tức.</div>
                             </div>
 
                             <!-- Trạng thái -->
@@ -155,16 +182,61 @@
         </div>
     </div>
 
-    <!-- Script live preview avatar -->
+    <!-- Script live preview avatar khi chọn file từ máy -->
     <script>
-        function updateAvatarPreview(url) {
+        function previewImage(input) {
+            if (!input.files || !input.files[0]) {
+                return;
+            }
+            const file = input.files[0];
+            const fileName = file.name.toLowerCase();
+            const validExts = ['.jpg', '.jpeg', '.png', '.gif', '.webp', '.bmp', '.jfif', '.svg'];
+            const isValidExt = validExts.some(ext => fileName.endsWith(ext));
+            const isValidMime = file.type && file.type.startsWith('image/');
+
+            if (!isValidExt && !isValidMime) {
+                alert('Vui lòng chọn một file hình ảnh hợp lệ (JPG, PNG, GIF, WEBP, BMP)!');
+                input.value = '';
+                return;
+            }
+
             const preview = document.getElementById('avatarPreview');
-            if (url && url.trim() !== '') {
-                preview.src = url.trim();
-            } else {
-                preview.src = 'https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/icons/person-circle.svg';
+            const previewStatus = document.getElementById('previewStatus');
+
+            if (preview) {
+                preview.onerror = null;
+
+                // 1. Thử URL.createObjectURL trước để xem trước tức thì
+                if (window.URL && window.URL.createObjectURL) {
+                    try {
+                        preview.src = URL.createObjectURL(file);
+                    } catch (e) {
+                        console.error('URL.createObjectURL error:', e);
+                    }
+                }
+
+                // 2. Dự phòng FileReader
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    preview.src = e.target.result;
+                };
+                reader.readAsDataURL(file);
+            }
+
+            if (previewStatus) {
+                const sizeKb = (file.size / 1024).toFixed(1);
+                previewStatus.innerHTML = '<span class="badge bg-success-subtle text-success border border-success-subtle px-2 py-1"><i class="bi bi-check-circle-fill me-1"></i>Đã chọn ảnh: ' + file.name + ' (' + sizeKb + ' KB)</span>';
             }
         }
+
+        document.addEventListener('DOMContentLoaded', function() {
+            const avatarInput = document.getElementById('avatarFile');
+            if (avatarInput) {
+                avatarInput.addEventListener('change', function() {
+                    previewImage(this);
+                });
+            }
+        });
     </script>
 </body>
 </html>

@@ -76,4 +76,10 @@ public class UserServiceImpl implements IUserService {
     public void deleteById(Long id) {
         userRepository.deleteById(id);
     }
+
+    @Override
+    @Transactional(readOnly = true)
+    public long count() {
+        return userRepository.count();
+    }
 }
