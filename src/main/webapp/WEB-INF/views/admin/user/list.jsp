@@ -107,7 +107,15 @@
                                         <td class="text-center">
                                             <c:choose>
                                                 <c:when test="${not empty u.avatar}">
-                                                    <img src="${u.avatar}" alt="avatar" class="rounded-circle shadow-sm"
+                                                    <c:choose>
+                                                        <c:when test="${u.avatar.startsWith('http://') or u.avatar.startsWith('https://')}">
+                                                            <c:set var="uAvatarSrc" value="${u.avatar}" />
+                                                        </c:when>
+                                                        <c:otherwise>
+                                                            <c:url var="uAvatarSrc" value="${u.avatar}" />
+                                                        </c:otherwise>
+                                                    </c:choose>
+                                                    <img src="${uAvatarSrc}" alt="avatar" class="rounded-circle shadow-sm"
                                                          style="width: 40px; height: 40px; object-fit: cover;"
                                                          onerror="this.src='https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/icons/person-circle.svg';">
                                                 </c:when>

@@ -22,9 +22,9 @@
         <div class="card-body p-4">
             <div class="row align-items-center">
                 <div class="col-md-8">
-                    <h4 class="fw-bold mb-2">Đồ Án Lập Trình Web - Spring Boot CRUD</h4>
+                    <h4 class="fw-bold mb-2">Bài tập Lập Trình Web - Spring Boot CRUD</h4>
                     <p class="mb-1 opacity-75">Sinh viên: <strong>Huỳnh Cao Trung Đức</strong> | MSSV: <strong>24133012</strong></p>
-                    <p class="mb-0 opacity-75">Trường: <strong>Đại học Sư phạm Kỹ thuật TP.HCM (HCMUTE)</strong></p>
+                    <p class="mb-0 opacity-75">Trường: <strong>Trường Đại học Công nghệ Kỹ thuật TP.HCM (HCM-UTE)</strong></p>
                 </div>
                 <div class="col-md-4 text-md-end mt-3 mt-md-0">
                     <span class="badge bg-light text-primary px-3 py-2 fs-6 me-1">Tomcat 10.1</span>

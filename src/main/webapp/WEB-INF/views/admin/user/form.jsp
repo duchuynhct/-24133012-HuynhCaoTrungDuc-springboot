@@ -33,8 +33,9 @@
                     </h5>
                 </div>
                 <div class="card-body p-4">
-                    <form action="<c:url value='/admin/users/save'/>" method="POST">
+                    <form action="<c:url value='/admin/users/save'/>" method="POST" enctype="multipart/form-data">
                         <input type="hidden" name="id" value="${user.id}"/>
+                        <input type="hidden" name="avatar" value="${user.avatar}"/>
 
                         <div class="row g-3">
                             <!-- Tên đăng nhập (Username) -->
@@ -103,21 +104,44 @@
                                 </select>
                             </div>
 
-                            <!-- Ảnh đại diện Avatar (URL) -->
+                            <!-- Ảnh đại diện Avatar (Upload File) -->
                             <div class="col-12">
-                                <label for="avatar" class="form-label fw-bold">Ảnh Đại Diện (URL Hình Ảnh)</label>
+                                <label for="avatarFile" class="form-label fw-bold">Ảnh Đại Diện (Tải Lên Từ Máy Tính)</label>
                                 <div class="d-flex align-items-center gap-3">
+                                    <c:choose>
+                                        <c:when test="${not empty user.avatar}">
+                                            <c:choose>
+                                                <c:when test="${user.avatar.startsWith('http://') or user.avatar.startsWith('https://')}">
+                                                    <c:set var="avatarImgSrc" value="${user.avatar}" />
+                                                </c:when>
+                                                <c:otherwise>
+                                                    <c:url var="avatarImgSrc" value="${user.avatar}" />
+                                                </c:otherwise>
+                                            </c:choose>
+                                        </c:when>
+                                        <c:otherwise>
+                                            <c:set var="avatarImgSrc" value="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/icons/person-circle.svg" />
+                                        </c:otherwise>
+                                    </c:choose>
                                     <img id="avatarPreview" 
-                                         src="${not empty user.avatar ? user.avatar : 'https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/icons/person-circle.svg'}" 
+                                         src="${avatarImgSrc}" 
                                          alt="Preview" class="rounded-circle shadow-sm border"
-                                         style="width: 55px; height: 55px; object-fit: cover;"
+                                         style="width: 60px; height: 60px; object-fit: cover;"
                                          onerror="this.src='https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/icons/person-circle.svg';">
-                                    <input type="text" class="form-control" id="avatar" name="avatar"
-                                           value="<c:out value='${user.avatar}'/>"
-                                           placeholder="Dán link ảnh trực tiếp (https://.../avatar.jpg)"
-                                           oninput="updateAvatarPreview(this.value)">
+                                    <div class="flex-grow-1">
+                                        <input type="file" class="form-control" id="avatarFile" name="avatarFile"
+                                               accept="image/png, image/jpeg, image/jpg, image/gif, image/webp"
+                                               onchange="previewImage(this);">
+                                        <div class="form-text">
+                                            Chọn file ảnh từ máy tính (JPG, PNG, GIF, WEBP). Ảnh sẽ được xem trước tức thì ngay bên cạnh.
+                                            <c:if test="${not empty user.avatar}">
+                                                <span class="text-primary fw-semibold d-block mt-1">
+                                                    <i class="bi bi-info-circle me-1"></i>Tài khoản đã có ảnh. Bỏ trống ô này nếu muốn giữ nguyên ảnh hiện tại.
+                                                </span>
+                                            </c:if>
+                                        </div>
+                                    </div>
                                 </div>
-                                <div class="form-text">Bạn có thể dán đường dẫn ảnh trực tuyến để xem trước ngay lập tức.</div>
                             </div>
 
                             <!-- Trạng thái -->
@@ -155,14 +179,21 @@
         </div>
     </div>
 
-    <!-- Script live preview avatar -->
+    <!-- Script live preview avatar khi chọn file từ máy -->
     <script>
-        function updateAvatarPreview(url) {
-            const preview = document.getElementById('avatarPreview');
-            if (url && url.trim() !== '') {
-                preview.src = url.trim();
-            } else {
-                preview.src = 'https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/icons/person-circle.svg';
+        function previewImage(input) {
+            if (input.files && input.files[0]) {
+                const file = input.files[0];
+                if (!file.type.startsWith('image/')) {
+                    alert('Vui lòng chọn đúng định dạng file hình ảnh (JPG, PNG, GIF, WEBP)!');
+                    input.value = '';
+                    return;
+                }
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    document.getElementById('avatarPreview').src = e.target.result;
+                };
+                reader.readAsDataURL(file);
             }
         }
     </script>

@@ -1,12 +1,13 @@
-# ĐỒ ÁN LẬP TRÌNH WEB - SPRING BOOT ADMIN CRUD
-**TRƯỜNG ĐẠI HỌC SƯ PHẠM KỸ THUẬT TP. HỒ CHÍ MINH (HCMUTE)**  
+# BÀI TẬP LẬP TRÌNH WEB - SPRING BOOT ADMIN CRUD
+**TRƯỜNG ĐẠI HỌC CÔNG NGHỆ KỸ THUẬT TP.HCM (HCM-UTE)**  
 **KHOA CÔNG NGHỆ THÔNG TIN - BỘ MÔN CÔNG NGHỆ PHẦN MỀM**
 
 ---
 
-## 📌 THÔNG TIN SINH VIÊN & ĐỒ ÁN
+## 📌 THÔNG TIN SINH VIÊN & BÀI TẬP
 * **Họ và tên sinh viên:** Huỳnh Cao Trung Đức
 * **Mã số sinh viên (MSSV):** 24133012
+* **Trường:** Trường Đại học Công nghệ Kỹ thuật TP.HCM (HCM-UTE)
 * **Môn học:** Lập Trình Web
 * **Đề tài:** Xây Dựng Ứng Dụng Quản Trị (Admin CRUD) Danh Mục (Category) và Người Dùng (User) với Spring Boot, JSP/JSTL, SiteMesh 3 Decorator và Bootstrap 5.
 * **Repository GitHub:** [https://github.com/duchuynhct/-24133012-HuynhCaoTrungDuc-springboot](https://github.com/duchuynhct/-24133012-HuynhCaoTrungDuc-springboot)
@@ -95,7 +96,7 @@ webapp
 * **Validate trùng lặp nghiệp vụ:** Kiểm tra và ngăn chặn ngay lập tức nếu tên đăng nhập (`username`) hoặc thư điện tử (`email`) đã tồn tại trong CSDL.
 * **Bảo lưu mật khẩu an toàn:** Khi chỉnh sửa tài khoản, nếu để trống trường mật khẩu, hệ thống tự động giữ nguyên mật khẩu cũ trong CSDL.
 * **Phân quyền & Trạng thái:** Lựa chọn vai trò Quản trị viên (`ROLE_ADMIN`) / Người dùng (`ROLE_USER`), trạng thái Hoạt động / Khóa có huy hiệu (Badge) màu trực quan.
-* **Live Avatar Preview:** Nhập URL ảnh đại diện, avatar hiển thị xem trước tức thì ngay bên cạnh.
+* **Tải lên & Live Avatar Preview:** Hỗ trợ tải trực tiếp ảnh đại diện từ máy tính cá nhân (JPG, PNG, GIF, WEBP) với tính năng xem trước tức thì (Client-side Instant Preview qua FileReader). Tự động bảo lưu ảnh cũ khi sửa hồ sơ nếu không chọn ảnh mới.
 
 ---
 
@@ -253,4 +254,4 @@ Dự án được xây dựng tuần tự qua 6 giai đoạn phát triển, áp 
 | **GĐ 6** | `feature/polish-and-docs` | Tinh chỉnh Dashboard thống kê, menu active, đồng bộ Tomcat 10 và hoàn thiện README | 🚀 Đang gửi PR |
 
 ---
-*Bản quyền đồ án © 2026 - Huỳnh Cao Trung Đức (MSSV: 24133012) - HCMUTE.*
+*Bản quyền bài tập © 2026 - Huỳnh Cao Trung Đức (MSSV: 24133012) - HCM-UTE.*
